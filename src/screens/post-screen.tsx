@@ -10,6 +10,7 @@ import { AppText } from '@/components/ui/app-text';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
 import { PressableOpacity } from '@/components/ui/pressable';
+import { ApiError } from '@/api/client';
 import { colors, radius } from '@/constants/theme';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import { useToastStore } from '@/store/useToastStore';
@@ -43,14 +44,18 @@ export function PostScreen() {
     ...item.replies.map((reply) => ({ key: reply.id, comment: reply, nested: true })),
   ]);
 
-  const publish = () => {
+  const publish = async () => {
     const body = draft.trim();
     if (!post || body.length < 1) return;
-    addComment({ postId: post.id, body, parentId: parent?.parentId ?? parent?.id });
-    setDraft('');
-    setParent(null);
-    tap();
-    show('Commentaire publié');
+    try {
+      const synced = await addComment({ postId: post.id, body, parentId: parent?.parentId ?? parent?.id });
+      setDraft('');
+      setParent(null);
+      tap();
+      show(synced ? 'Commentaire publié' : 'Le commentaire est resté sur cet appareil.');
+    } catch (error) {
+      show(error instanceof ApiError ? error.message : 'Le commentaire est resté sur cet appareil.');
+    }
   };
 
   if (!post) {
@@ -118,7 +123,7 @@ export function PostScreen() {
             accessibilityRole="button"
             accessibilityLabel="Publier le commentaire"
             disabled={draft.trim().length < 1}
-            onPress={publish}
+            onPress={() => void publish()}
             style={[styles.send, draft.trim().length < 1 && styles.sendOff]}
           >
             <Icon name="send" size={18} color={colors.white} />

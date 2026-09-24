@@ -21,7 +21,7 @@ import { activityScore, hotTopics } from '@/utils/topics';
 
 export function HomeScreen() {
   const nhl = useNhlSnapshot();
-  const favoriteTeamId = useSessionStore((state) => state.user.favoriteTeamId);
+  const favoriteTeamId = useSessionStore((state) => state.user?.favoriteTeamId);
   const posts = useCommunityStore((state) => state.posts);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
   const comments = useCommunityStore((state) => state.comments);
@@ -29,10 +29,22 @@ export function HomeScreen() {
   const poll = useCommunityStore((state) => state.polls.find((item) => item.id === 'qotd'));
 
   const visible = useMemo(() => posts.filter((post) => !hidden.includes(post.id)), [posts, hidden]);
-  const popular = useMemo(
-    () => [...visible].sort((a, b) => activityScore(b, comments, likes) - activityScore(a, comments, likes)).slice(0, 6),
-    [visible, comments, likes],
-  );
+  const meId = useSessionStore((state) => state.user?.id);
+  const popular = useMemo(() => {
+    const ranked = [...visible].sort((a, b) => activityScore(b, comments, likes) - activityScore(a, comments, likes));
+    const mine = visible
+      .filter((post) => post.authorId === meId)
+      .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
+    const picked: typeof visible = [];
+    const seen = new Set<string>();
+    for (const post of [...mine, ...ranked]) {
+      if (seen.has(post.id)) continue;
+      seen.add(post.id);
+      picked.push(post);
+      if (picked.length >= 8) break;
+    }
+    return picked;
+  }, [visible, comments, likes, meId]);
   const topics = useMemo(() => hotTopics(visible, comments, likes), [visible, comments, likes]);
   const teams = nhl.data?.teams ?? [];
   const today = useMemo(() => {
@@ -97,11 +109,7 @@ export function HomeScreen() {
             <SectionHeader title="Discussions populaires" actionLabel="Communauté" onAction={() => router.navigate('/community')} />
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={styles.pad}>
-            <PostCard post={item} />
-          </View>
-        )}
+        renderItem={({ item }) => <PostCard post={item} layout="full" />}
         ItemSeparatorComponent={() => <View style={styles.gap} />}
       />
       <ComposeButton />
@@ -133,7 +141,8 @@ const styles = StyleSheet.create({
     paddingRight: 84,
   },
   gap: {
-    height: 12,
+    height: 8,
+    backgroundColor: colors.bg,
   },
   banner: {
     marginHorizontal: 16,

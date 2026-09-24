@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, View } from 'react-native';
 
 import { CommentRow } from '@/components/feed/comment-row';
 import { PostCard } from '@/components/feed/post-card';
@@ -12,11 +12,12 @@ import { FilterRow } from '@/components/ui/filter-row';
 import { PressableOpacity } from '@/components/ui/pressable';
 import { TeamLogo } from '@/components/ui/team-logo';
 import { POINTS } from '@/constants/levels';
-import { CURRENT_USER_ID } from '@/constants/session';
 import { colors, radius } from '@/constants/theme';
 import { useNhlSnapshot } from '@/hooks/use-nhl';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import { useSessionStore } from '@/store/useSessionStore';
+import { useToastStore } from '@/store/useToastStore';
+import { ApiError } from '@/api/client';
 import type { Comment, Post } from '@/types/social';
 import { getLevel } from '@/utils/level';
 import { displayName } from '@/utils/text';
@@ -29,16 +30,19 @@ const SECTIONS = [
 
 export function ProfileScreen() {
   const user = useSessionStore((state) => state.user);
+  const signOut = useSessionStore((state) => state.signOut);
+  const removeAccount = useSessionStore((state) => state.removeAccount);
+  const show = useToastStore((state) => state.show);
   const posts = useCommunityStore((state) => state.posts);
   const comments = useCommunityStore((state) => state.comments);
   const likes = useCommunityStore((state) => state.likes);
   const nhl = useNhlSnapshot();
   const [section, setSection] = useState('posts');
-  const team = nhl.data?.teams.find((item) => item.id === user.favoriteTeamId);
-  const level = getLevel(user.points);
-  const mine = posts.filter((post) => post.authorId === user.id);
-  const myComments = comments.filter((comment) => comment.authorId === user.id);
-  const likedIds = new Set(likes.filter((like) => like.userId === CURRENT_USER_ID && like.targetType === 'post').map((like) => like.targetId));
+  const team = nhl.data?.teams.find((item) => item.id === user?.favoriteTeamId);
+  const level = getLevel(user?.points ?? 0);
+  const mine = posts.filter((post) => post.authorId === user?.id);
+  const myComments = comments.filter((comment) => comment.authorId === user?.id);
+  const likedIds = new Set(likes.filter((like) => like.userId === user?.id && like.targetType === 'post').map((like) => like.targetId));
   const likedPosts = posts.filter((post) => likedIds.has(post.id));
   const received = likes.filter((like) => like.targetType === 'post' && mine.some((post) => post.id === like.targetId)).length;
 
@@ -51,6 +55,14 @@ export function ProfileScreen() {
     const list = section === 'likes' ? likedPosts : mine;
     return list.map((post) => ({ kind: 'post', id: post.id, post }));
   }, [section, myComments, likedPosts, mine]);
+
+  if (!user) {
+    return (
+      <View style={styles.screen}>
+        <TabHeader title="Profil" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.screen}>
@@ -109,6 +121,27 @@ export function ProfileScreen() {
                 Modifier
               </AppText>
             </PressableOpacity>
+            <PressableOpacity style={styles.signOut} onPress={() => router.push('/legal')}>
+              <AppText variant="footnote" color={colors.navy}>
+                Confidentialité et stores
+              </AppText>
+            </PressableOpacity>
+            <PressableOpacity
+              style={styles.signOut}
+              onPress={() => {
+                signOut();
+                router.replace('/auth/phone');
+              }}
+            >
+              <AppText variant="footnote" color={colors.muted}>
+                Se déconnecter
+              </AppText>
+            </PressableOpacity>
+            <PressableOpacity style={styles.signOut} onPress={() => confirmDelete(removeAccount, show)}>
+              <AppText variant="footnote" color={colors.red}>
+                Supprimer mon compte
+              </AppText>
+            </PressableOpacity>
             <FilterRow options={SECTIONS} value={section} onChange={setSection} />
           </View>
         }
@@ -122,20 +155,41 @@ export function ProfileScreen() {
             }
           />
         }
-        renderItem={({ item }) => (
-          <View style={styles.pad}>
-            {item.kind === 'post' ? (
-              <PostCard post={item.post} />
-            ) : (
+        renderItem={({ item }) =>
+          item.kind === 'post' ? (
+            <PostCard post={item.post} layout="full" />
+          ) : (
+            <View style={styles.pad}>
               <View style={styles.commentCard}>
                 <CommentRow comment={item.comment} onReply={() => router.push(`/post/${item.comment.postId}`)} />
               </View>
-            )}
-          </View>
-        )}
+            </View>
+          )
+        }
         ItemSeparatorComponent={() => <View style={styles.gap} />}
       />
     </View>
+  );
+}
+
+function confirmDelete(removeAccount: () => Promise<void>, show: (message: string) => void) {
+  Alert.alert(
+    'Supprimer le compte',
+    'Votre numéro, votre profil et votre session seront effacés. Cette action est définitive.',
+    [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: () => {
+          removeAccount()
+            .then(() => router.replace('/auth/phone'))
+            .catch((error: unknown) => {
+              show(error instanceof ApiError ? error.message : 'Le compte n’a pas pu être supprimé.');
+            });
+        },
+      },
+    ],
   );
 }
 
@@ -184,6 +238,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   flex: { flex: 1 },
+  signOut: { alignSelf: 'flex-start', marginHorizontal: 16, paddingVertical: 4 },
   pad: { paddingHorizontal: 16 },
   gap: { height: 12 },
   commentCard: {

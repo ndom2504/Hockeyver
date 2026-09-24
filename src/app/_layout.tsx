@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { Providers } from '@/components/providers';
+import { SessionGate } from '@/components/session-gate';
 import { ToastHost } from '@/components/ui/toast';
 import { colors } from '@/constants/theme';
 
@@ -14,6 +15,7 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <View style={styles.canvas}>
         <View style={styles.frame}>
+          <SessionGate>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -21,6 +23,7 @@ export default function RootLayout() {
               animation: 'slide_from_right',
             }}
           />
+          </SessionGate>
           <ToastHost />
         </View>
       </View>

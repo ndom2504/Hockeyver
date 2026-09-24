@@ -18,6 +18,7 @@ export function CommunityScreen() {
   const [filter, setFilter] = useState<Filter>('all');
   const [refreshing, setRefreshing] = useState(false);
   const posts = useCommunityStore((state) => state.posts);
+  const hydrateFeed = useCommunityStore((state) => state.hydrateFeed);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
   const poll = useCommunityStore((state) => state.polls.find((item) => item.id === 'poll-rivalry'));
 
@@ -44,7 +45,7 @@ export function CommunityScreen() {
             colors={[colors.navy]}
             onRefresh={() => {
               setRefreshing(true);
-              setTimeout(() => setRefreshing(false), 500);
+              void hydrateFeed().finally(() => setRefreshing(false));
             }}
           />
         }

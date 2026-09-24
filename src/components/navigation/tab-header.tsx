@@ -46,7 +46,7 @@ export function TabHeader({ title, subtitle, showSearch, showAvatar, actionLabel
         {showSearch ? (
           <IconButton name="search" label="Rechercher" onPress={() => router.push('/search')} />
         ) : null}
-        {showAvatar ? (
+        {showAvatar && user ? (
           <PressableOpacity
             accessibilityRole="button"
             accessibilityLabel="Ouvrir le profil"

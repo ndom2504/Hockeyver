@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/build/react-navigation/bottom-tabs';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +8,8 @@ import { Icon, type IconName } from '@/components/ui/icon';
 import { PressableOpacity } from '@/components/ui/pressable';
 import { colors } from '@/constants/theme';
 import { useCommunityStore } from '@/store/useCommunityStore';
+import { useSessionStore } from '@/store/useSessionStore';
+import { useToastStore } from '@/store/useToastStore';
 import { tap } from '@/utils/haptics';
 
 const TABS: Record<string, { label: string; icon: IconName }> = {
@@ -20,6 +23,7 @@ const TABS: Record<string, { label: string; icon: IconName }> = {
 export function AppTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const unread = useCommunityStore((store) => store.notifications.filter((item) => !item.read).length);
+  const status = useSessionStore((store) => store.status);
 
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
@@ -28,6 +32,12 @@ export function AppTabBar({ state, navigation }: BottomTabBarProps) {
         const tab = TABS[route.name] ?? { label: route.name, icon: 'home' as const };
         const color = focused ? colors.navy : colors.faint;
         const onPress = () => {
+          if (status !== 'ready' && route.name !== 'index') {
+            tap();
+            useToastStore.getState().show('Connectez-vous pour continuer.');
+            router.push(status === 'needsProfile' ? '/auth/profile' : '/auth/phone');
+            return;
+          }
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
           if (!focused && !event.defaultPrevented) {
             tap();

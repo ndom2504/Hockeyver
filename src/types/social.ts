@@ -59,6 +59,7 @@ export type NotificationType =
   | 'mention'
   | 'favorite_team'
   | 'game_start'
+  | 'goal'
   | 'game_result'
   | 'poll';
 
@@ -67,6 +68,8 @@ export type AppNotification = {
   type: NotificationType;
   createdAt: string;
   read: boolean;
+  title?: string;
+  body?: string;
   actorId?: string;
   postId?: string;
   matchId?: string;

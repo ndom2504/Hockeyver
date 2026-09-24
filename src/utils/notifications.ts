@@ -16,6 +16,22 @@ export function notificationPresentation(
   const home = teams.find((team) => team.id === match?.homeTeamId);
   const away = teams.find((team) => team.id === match?.awayTeamId);
 
+  const presented = present(notification, actorName, favorite, match, home, away);
+  return {
+    ...presented,
+    title: notification.title || presented.title,
+    body: notification.body || presented.body,
+  };
+}
+
+function present(
+  notification: AppNotification,
+  actorName: string,
+  favorite: Team | undefined,
+  match: Match | undefined,
+  home: Team | undefined,
+  away: Team | undefined,
+) {
   switch (notification.type) {
     case 'reply':
       return {
@@ -47,6 +63,15 @@ export function notificationPresentation(
       return {
         title: "Coup d'envoi",
         body: home && away ? `${away.abbreviation} chez ${home.abbreviation} commence bientôt.` : 'Un match de votre équipe commence bientôt.',
+        href: match ? `/match/${match.id}` : undefined,
+      };
+    case 'goal':
+      return {
+        title: 'But',
+        body:
+          match && home && away
+            ? `${away.abbreviation} ${match.awayScore} – ${match.homeScore} ${home.abbreviation}`
+            : 'But dans un match en direct.',
         href: match ? `/match/${match.id}` : undefined,
       };
     case 'game_result':

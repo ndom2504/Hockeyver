@@ -5,7 +5,7 @@ import { Icon } from '@/components/ui/icon';
 import { PressableOpacity } from '@/components/ui/pressable';
 import { colors, radius } from '@/constants/theme';
 import { REPORT_REASONS } from '@/features/moderation/reasons';
-import { CURRENT_USER_ID } from '@/constants/session';
+import { useSessionStore } from '@/store/useSessionStore';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import { useToastStore } from '@/store/useToastStore';
 import type { ReportReason } from '@/types/social';
@@ -22,7 +22,8 @@ export function PostActions({ postId, visible, onClose }: Props) {
   const deletePost = useCommunityStore((state) => state.deletePost);
   const reportPost = useCommunityStore((state) => state.reportPost);
   const show = useToastStore((state) => state.show);
-  const mine = post?.authorId === CURRENT_USER_ID;
+  const meId = useSessionStore((state) => state.user?.id);
+  const mine = post?.authorId === meId;
 
   const close = () => onClose();
 

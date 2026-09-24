@@ -15,7 +15,7 @@ import { fold } from '@/utils/text';
 
 export function FavoriteTeamScreen() {
   const nhl = useNhlSnapshot();
-  const favoriteId = useSessionStore((state) => state.user.favoriteTeamId);
+  const favoriteId = useSessionStore((state) => state.user?.favoriteTeamId);
   const setFavoriteTeam = useSessionStore((state) => state.setFavoriteTeam);
   const show = useToastStore((state) => state.show);
   const [query, setQuery] = useState('');
@@ -46,9 +46,12 @@ export function FavoriteTeamScreen() {
             <PressableOpacity
               style={[styles.row, selected && styles.selected]}
               onPress={() => {
-                setFavoriteTeam(item.id);
-                show('Équipe favorite mise à jour');
-                router.back();
+                setFavoriteTeam(item.id)
+                  .then(() => {
+                    show('Équipe favorite mise à jour');
+                    router.back();
+                  })
+                  .catch(() => show('Équipe non enregistrée'));
               }}
             >
               <TeamLogo team={item} size={36} />

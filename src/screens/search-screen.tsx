@@ -46,7 +46,7 @@ export function SearchScreen() {
         .filter((tag) => needle.length > 0 && fold(tag).includes(needle)),
     ),
   ];
-  const people = [me, ...users].filter((user) => {
+  const people = [me, ...users].filter((user): user is NonNullable<typeof me> => Boolean(user)).filter((user) => {
     if (needle.length === 0) return false;
     const wrote = [...posts, ...comments.map((comment) => ({ body: comment.body, authorId: comment.authorId }))].some(
       (item) => item.authorId === user.id && fold(item.body).includes(needle),

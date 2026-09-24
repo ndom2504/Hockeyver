@@ -8,6 +8,7 @@ import { StackHeader } from '@/components/navigation/stack-header';
 import { AppText } from '@/components/ui/app-text';
 import { Icon } from '@/components/ui/icon';
 import { PressableOpacity } from '@/components/ui/pressable';
+import { ApiError } from '@/api/client';
 import { colors, radius } from '@/constants/theme';
 import { CATEGORIES } from '@/constants/categories';
 import { useNhlSnapshot } from '@/hooks/use-nhl';
@@ -27,6 +28,7 @@ export function ComposeScreen() {
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [picker, setPicker] = useState<'team' | 'player' | null>(null);
+  const [publishing, setPublishing] = useState(false);
   const [query, setQuery] = useState('');
 
   const team = nhl.data?.teams.find((item) => item.id === teamId);
@@ -43,19 +45,26 @@ export function ComposeScreen() {
       .filter((item) => fold(`${item.firstName} ${item.lastName}`).includes(needle));
   }, [picker, query, nhl.data, teamId]);
 
-  const publish = () => {
-    if (!canPublish || !category) return;
-    createPost({
-      body,
-      category,
-      imageUrl: imageUrl ?? undefined,
-      teamId: teamId ?? undefined,
-      playerId: playerId ?? undefined,
-      extraTags: [team?.tag, player?.tag].filter((tag): tag is string => Boolean(tag)),
-    });
-    tap();
-    show('Publication publiée');
-    router.dismissTo('/community');
+  const publish = async () => {
+    if (!canPublish || !category || publishing) return;
+    setPublishing(true);
+    try {
+      await createPost({
+        body,
+        category,
+        imageUrl: imageUrl ?? undefined,
+        teamId: teamId ?? undefined,
+        playerId: playerId ?? undefined,
+        extraTags: [team?.tag, player?.tag].filter((tag): tag is string => Boolean(tag)),
+      });
+      tap();
+      show('Publication publiée');
+      router.dismissTo('/community');
+    } catch (error) {
+      show(error instanceof ApiError ? error.message : 'La publication est restée sur cet appareil.');
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const pickImage = async () => {
@@ -85,9 +94,13 @@ export function ComposeScreen() {
               </AppText>
             </PressableOpacity>
           ) : (
-            <PressableOpacity disabled={!canPublish} onPress={publish} style={!canPublish ? styles.disabled : undefined}>
+            <PressableOpacity
+              disabled={!canPublish || publishing}
+              onPress={() => void publish()}
+              style={!canPublish || publishing ? styles.disabled : undefined}
+            >
               <AppText variant="callout" color={colors.navy}>
-                Publier
+                {publishing ? 'Publication…' : 'Publier'}
               </AppText>
             </PressableOpacity>
           )

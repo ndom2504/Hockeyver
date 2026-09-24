@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HOCKEYVER — La communauté des partisans de la NHL</title>
+    <link rel="canonical" href="https://www.hockeyver.com/" />
+    <meta property="og:url" content="https://www.hockeyver.com/" />
+    <meta property="og:title" content="HOCKEYVER — La communauté des partisans de la NHL" />
+    <meta
+      name="description"
+      content="HOCKEYVER est la communauté des partisans de la NHL. Publiez, débattez et suivez votre équipe. Application indépendante, non affiliée à la NHL."
+    />
+    <meta
+      property="og:description"
+      content="HOCKEYVER est la communauté des partisans de la NHL. Publiez, débattez et suivez votre équipe."
+    />
+    <link rel="icon" href="/favicon.png" />
+    <meta name="theme-color" content="#071E45" />
+    <style>
+      :root {
+        --bg: #f4f6f8;
+        --surface: #ffffff;
+        --ink: #12171f;
+        --muted: #5e6a7a;
+        --line: #e4eaf1;
+        --navy: #0a2f6b;
+        --navy-deep: #071e45;
+        --ice: #e7f0fa;
+        --red: #c8102e;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.5;
+      }
+      a { color: inherit; }
+      .wrap { width: min(1080px, calc(100% - 32px)); margin: 0 auto; }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: rgba(244, 246, 248, 0.92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 72px;
+        gap: 16px;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; letter-spacing: 0.08em; }
+      .brand img { width: 40px; height: 40px; border-radius: 12px; }
+      .nav a.quiet { color: var(--navy); text-decoration: none; font-weight: 650; font-size: 14px; }
+      .hero {
+        background: radial-gradient(1200px 500px at 80% -10%, #1a4f9c 0%, transparent 55%), var(--navy-deep);
+        color: white;
+        padding: 72px 0 64px;
+      }
+      .hero-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; align-items: center; }
+      .kicker { color: #9ec0ef; font-size: 13px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin: 0 0 12px; }
+      h1 { font-size: clamp(40px, 6vw, 68px); line-height: 0.95; letter-spacing: -0.04em; margin: 0 0 16px; }
+      .lede { font-size: 18px; color: #d5e3f5; max-width: 540px; margin: 0 0 28px; }
+      .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 18px;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+      .btn.primary { background: white; color: var(--navy-deep); }
+      .btn.ghost { border: 1px solid rgba(255,255,255,0.35); color: white; }
+      .mark-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 28px;
+        padding: 28px;
+        text-align: center;
+      }
+      .mark-card img { width: min(220px, 70%); border-radius: 36px; }
+      .mark-card p { margin: 16px 0 0; color: #d5e3f5; font-size: 14px; }
+      main { padding: 56px 0 24px; }
+      h2 { font-size: 32px; letter-spacing: -0.03em; margin: 0 0 8px; }
+      .section-lead { color: var(--muted); margin: 0 0 24px; max-width: 620px; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+      article {
+        background: var(--surface);
+        border-radius: 18px;
+        padding: 20px;
+        border: 1px solid var(--line);
+      }
+      article strong { display: block; margin-bottom: 6px; }
+      article p { margin: 0; color: var(--muted); }
+      .band { margin-top: 28px; background: var(--ice); border-radius: 24px; padding: 28px; }
+      .band ol { margin: 12px 0 0; padding-left: 18px; color: var(--navy-deep); }
+      .note { color: var(--muted); font-size: 14px; }
+      footer {
+        margin-top: 48px;
+        background: var(--navy-deep);
+        color: #d5e3f5;
+        padding: 28px 0;
+      }
+      footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+      footer a { color: white; }
+      @media (max-width: 800px) {
+        .hero { padding: 48px 0 40px; }
+        .hero-grid, .grid { grid-template-columns: 1fr; }
+        .mark-card { order: -1; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap nav">
+        <a class="brand" href="/"><img src="/icon.png" alt="" /> HOCKEYVER</a>
+        <a class="quiet" href="mailto:info@misterdil.ca">Contact</a>
+      </div>
+    </header>
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <p class="kicker">Communauté NHL</p>
+          <h1>Le hockey se discute ici.</h1>
+          <p class="lede">
+            HOCKEYVER rassemble les partisans des 32 équipes. Publiez, répondez, suivez votre club et gardez le fil des matchs.
+          </p>
+          <div class="actions">
+            <a class="btn primary" href="#communaute">Entrer dans la communauté</a>
+            <a class="btn ghost" href="mailto:info@misterdil.ca">Écrire au support</a>
+          </div>
+        </div>
+        <div class="mark-card">
+          <img src="/icon.png" alt="Icône HOCKEYVER" />
+          <p>Application indépendante. Ni affiliée à la NHL, ni approuvée par elle.</p>
+        </div>
+      </div>
+    </section>
+    <main class="wrap" id="communaute">
+      <h2>Une place pour les partisans</h2>
+      <p class="section-lead">
+        L’accueil est ouvert. La suite de l’application, les publications et les réactions demandent un compte.
+      </p>
+      <div class="grid">
+        <article>
+          <strong>Accueil</strong>
+          <p>Les matchs du jour, les discussions et le sondage, dès l’ouverture.</p>
+        </article>
+        <article>
+          <strong>Communauté</strong>
+          <p>Des publications pleine largeur sur les équipes, les joueurs et les matchs.</p>
+        </article>
+        <article>
+          <strong>Votre équipe</strong>
+          <p>Un pseudo, une équipe favorite parmi les 32 clubs, et les alertes de but et de score.</p>
+        </article>
+      </div>
+      <div class="band">
+        <h2>Rejoindre HOCKEYVER</h2>
+        <p class="section-lead">L’application iPhone est en test. Le compte se crée dans l’app.</p>
+        <ol>
+          <li>Ouvrez HOCKEYVER et regardez l’accueil sans compte.</li>
+          <li>Pour publier ou changer d’écran, connectez-vous par texto ou avec Apple.</li>
+          <li>Choisissez votre pseudo et votre équipe favorite.</li>
+        </ol>
+        <p class="note">Support : <a href="mailto:info@misterdil.ca">info@misterdil.ca</a>. Le compte se supprime dans Profil.</p>
+      </div>
+    </main>
+    <footer>
+      <div class="wrap">
+        <span>© 2026 HOCKEYVER</span>
+        <a href="mailto:info@misterdil.ca">info@misterdil.ca</a>
+      </div>
+    </footer>
+  </body>
+</html>

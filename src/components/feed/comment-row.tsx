@@ -6,7 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Icon } from '@/components/ui/icon';
 import { PressableOpacity } from '@/components/ui/pressable';
 import { colors } from '@/constants/theme';
-import { CURRENT_USER_ID } from '@/constants/session';
+import { useSessionStore } from '@/store/useSessionStore';
 import { usePerson } from '@/hooks/use-people';
 import { useNhlIndex } from '@/hooks/use-nhl';
 import { useCommunityStore } from '@/store/useCommunityStore';
@@ -26,8 +26,9 @@ export function CommentRow({ comment, nested = false, onReply }: Props) {
   const teamId = author?.favoriteTeamId;
   const { index } = useNhlIndex();
   const team = teamId ? index.teams.get(teamId) : undefined;
+  const meId = useSessionStore((state) => state.user?.id);
   const liked = useCommunityStore((state) =>
-    state.likes.some((like) => like.targetType === 'comment' && like.targetId === comment.id && like.userId === CURRENT_USER_ID),
+    state.likes.some((like) => like.targetType === 'comment' && like.targetId === comment.id && like.userId === meId),
   );
   const likeCount = useCommunityStore(
     (state) => state.likes.filter((like) => like.targetType === 'comment' && like.targetId === comment.id).length,
@@ -84,7 +85,7 @@ export function CommentRow({ comment, nested = false, onReply }: Props) {
               Répondre
             </AppText>
           </PressableOpacity>
-          {comment.authorId === CURRENT_USER_ID ? (
+          {comment.authorId === meId ? (
             <PressableOpacity accessibilityRole="button" onPress={onDelete} hitSlop={6}>
               <AppText variant="caption" color={colors.muted}>
                 Supprimer

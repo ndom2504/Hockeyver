@@ -20,6 +20,7 @@ const ICONS: Record<NotificationType, IconName> = {
   mention: 'person',
   favorite_team: 'nhl',
   game_start: 'nhl',
+  goal: 'nhl',
   game_result: 'nhl',
   poll: 'check',
 };
@@ -29,7 +30,7 @@ export function NotificationsScreen() {
   const users = useCommunityStore((state) => state.users);
   const markRead = useCommunityStore((state) => state.markNotificationRead);
   const markAll = useCommunityStore((state) => state.markAllNotificationsRead);
-  const favoriteTeamId = useSessionStore((state) => state.user.favoriteTeamId);
+  const favoriteTeamId = useSessionStore((state) => state.user?.favoriteTeamId ?? '');
   const nhl = useNhlSnapshot();
   const unread = notifications.some((item) => !item.read);
   const ordered = [...notifications].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));

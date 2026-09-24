@@ -65,7 +65,7 @@ export function TeamScreen() {
   const upcoming = games.filter((match) => match.status === 'scheduled').slice(0, 3);
   const results = games.filter((match) => match.status === 'final').slice(0, 3);
   const roster = nhl.data.players.filter((player) => player.teamId === team.id);
-  const fanCount = fans.filter((fan) => fan.favoriteTeamId === team.id).length + (me.favoriteTeamId === team.id ? 1 : 0);
+  const fanCount = fans.filter((fan) => fan.favoriteTeamId === team.id).length + (me?.favoriteTeamId === team.id ? 1 : 0);
   const discussions = posts.filter((post) => {
     if (hidden.includes(post.id)) return false;
     return post.teamId === team.id || post.hashtags.some((tag) => fold(tag) === fold(team.tag));

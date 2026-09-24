@@ -11,7 +11,7 @@ import { PressableOpacity } from '@/components/ui/pressable';
 import { TeamLogo } from '@/components/ui/team-logo';
 import { PostActions } from '@/components/feed/post-actions';
 import { colors, radius, shadow } from '@/constants/theme';
-import { CURRENT_USER_ID } from '@/constants/session';
+import { useSessionStore } from '@/store/useSessionStore';
 import { useNhlIndex } from '@/hooks/use-nhl';
 import { usePerson } from '@/hooks/use-people';
 import { useCommunityStore } from '@/store/useCommunityStore';
@@ -27,14 +27,42 @@ type Props = {
   onComment?: () => void;
 };
 
+function PostImage({ uri, full }: { uri: string; full: boolean }) {
+  const [ratio, setRatio] = useState(4 / 3);
+  return (
+    <Image
+      source={{ uri }}
+      style={[full ? styles.imageFull : styles.image, { aspectRatio: ratio }]}
+      contentFit="contain"
+      transition={200}
+      cachePolicy="memory-disk"
+      onLoad={(event) => {
+        const width = event.source?.width ?? 0;
+        const height = event.source?.height ?? 0;
+        if (width > 0 && height > 0) setRatio(width / height);
+      }}
+    />
+  );
+}
+
 export function PostCard({ post, variant = 'feed', layout = 'card', onComment }: Props) {
-  const author = usePerson(post.authorId);
+  const author = usePerson(post.authorId) ?? {
+    id: post.authorId,
+    firstName: 'Partisan',
+    lastName: '',
+    username: 'partisan',
+    avatarUrl: `https://api.dicebear.com/9.x/notionists/png?seed=${encodeURIComponent(post.authorId)}&backgroundColor=e7f0fa`,
+    favoriteTeamId: '',
+    bio: '',
+    points: 0,
+  };
   const { index } = useNhlIndex();
   const favorite = author ? index.teams.get(author.favoriteTeamId) : undefined;
   const contextTeam = post.teamId ? index.teams.get(post.teamId) : undefined;
   const contextPlayer = post.playerId ? index.players.get(post.playerId) : undefined;
+  const meId = useSessionStore((state) => state.user?.id);
   const liked = useCommunityStore((state) =>
-    state.likes.some((like) => like.targetType === 'post' && like.targetId === post.id && like.userId === CURRENT_USER_ID),
+    state.likes.some((like) => like.targetType === 'post' && like.targetId === post.id && like.userId === meId),
   );
   const likeCount = useCommunityStore(
     (state) => state.likes.filter((like) => like.targetType === 'post' && like.targetId === post.id).length,
@@ -48,8 +76,6 @@ export function PostCard({ post, variant = 'feed', layout = 'card', onComment }:
   const full = layout === 'full';
   const long = post.body.length > 220;
   const body = expanded || !long ? post.body : `${post.body.slice(0, 220).trim()}…`;
-
-  if (!author) return null;
 
   const open = () => {
     if (variant === 'detail') return;
@@ -100,13 +126,7 @@ export function PostCard({ post, variant = 'feed', layout = 'card', onComment }:
 
       {post.imageUrl ? (
         <PressableOpacity onPress={open} disabled={variant === 'detail'}>
-          <Image
-            source={{ uri: post.imageUrl }}
-            style={full ? styles.imageFull : styles.image}
-            contentFit="cover"
-            transition={200}
-            cachePolicy="memory-disk"
-          />
+          <PostImage uri={post.imageUrl} full={full} />
         </PressableOpacity>
       ) : null}
 
@@ -202,14 +222,12 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 190,
     borderRadius: radius.md,
     backgroundColor: colors.ice,
   },
   imageFull: {
     width: '100%',
-    height: 280,
-    backgroundColor: colors.ice,
+    backgroundColor: colors.bg,
   },
   context: {
     alignSelf: 'flex-start',
