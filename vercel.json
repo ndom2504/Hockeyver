@@ -3,5 +3,15 @@
     "api/**/*.mjs": {
       "maxDuration": 15
     }
-  }
+  },
+  "redirects": [
+    { "source": "/Confidentialite", "destination": "/confidentialite", "permanent": true },
+    { "source": "/confidentialité", "destination": "/confidentialite", "permanent": true },
+    { "source": "/Confidentialité", "destination": "/confidentialite", "permanent": true },
+    { "source": "/privacy", "destination": "/confidentialite", "permanent": true },
+    { "source": "/privacy-policy", "destination": "/confidentialite", "permanent": true },
+    { "source": "/politique-de-confidentialite", "destination": "/confidentialite", "permanent": true },
+    { "source": "/regles-de-confidentialite", "destination": "/confidentialite", "permanent": true },
+    { "source": "/règles-de-confidentialité", "destination": "/confidentialite", "permanent": true }
+  ]
 }
