@@ -1,5 +1,5 @@
-import { health } from '../../server/auth.mjs';
-import { applyCors, finish } from '../../server/vercel.mjs';
+import { health } from '../server/auth.mjs';
+import { applyCors, finish } from '../server/vercel.mjs';
 
 export default function handler(req, res) {
   applyCors(res);

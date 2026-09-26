@@ -5,6 +5,9 @@
   },
   "build": {
     "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://www.hockeyver.com"
+      },
       "autoIncrement": true,
       "distribution": "store",
       "android": {

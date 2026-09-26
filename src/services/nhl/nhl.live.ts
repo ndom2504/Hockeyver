@@ -1,5 +1,5 @@
-import { RAW_TEAMS } from '@/services/nhl/nhl.mock';
-import type { FinishType, Match, MatchStatus, Standing } from '@/services/nhl/nhl.types';
+import { RAW_TEAMS } from './nhl.mock';
+import type { FinishType, Match, MatchStatus, Standing } from './nhl.types';
 
 const NHL = 'https://api-web.nhle.com/v1';
 const TEAM_IDS = new Set(RAW_TEAMS.map((team) => team.id));

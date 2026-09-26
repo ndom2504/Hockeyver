@@ -1,0 +1,9 @@
+import { deleteAccount } from '../../server/auth.mjs';
+import { applyCors, finish } from '../../server/vercel.mjs';
+
+export default function handler(req, res) {
+  applyCors(res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'DELETE') return res.status(405).json({ error: 'Méthode non autorisée.' });
+  return finish(res, deleteAccount(req.headers.authorization));
+}

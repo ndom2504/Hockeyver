@@ -1,5 +1,5 @@
-import { currentUser } from '../../../server/auth.mjs';
-import { applyCors, finish } from '../../../server/vercel.mjs';
+import { currentUser } from '../../server/auth.mjs';
+import { applyCors, finish } from '../../server/vercel.mjs';
 
 export default function handler(req, res) {
   applyCors(res);

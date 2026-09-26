@@ -1,4 +1,4 @@
-import type { RawMatch, RawPlayer, RawStanding, RawTeam } from '@/services/nhl/nhl.types';
+import type { RawMatch, RawPlayer, RawStanding, RawTeam } from './nhl.types';
 
 export const RAW_TEAMS: RawTeam[] = [
   { id: 'ANA', city: 'Anaheim', name: 'Ducks', fullName: "Ducks d'Anaheim", tag: 'Ducks', conference: 'Western', division: 'Pacific', color: '#F47A38' },

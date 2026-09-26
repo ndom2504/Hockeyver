@@ -16,11 +16,14 @@ type RequestOptions = {
   body?: unknown;
 };
 
+const PRODUCTION_API = 'https://www.hockeyver.com';
+
 function resolveUrl(path: string) {
-  // En développement, une adresse relative passe par le serveur Expo (le même que l’app).
-  // Une URL https sert uniquement une fois l’API publiée.
-  if (API_BASE_URL.startsWith('https://')) return `${API_BASE_URL}${path}`;
-  return path;
+  const configured = API_BASE_URL.replace(/\/$/, '');
+  if (configured.startsWith('https://')) return `${configured}${path}`;
+  // En développement, une adresse relative passe par le serveur Expo.
+  if (__DEV__) return path;
+  return `${PRODUCTION_API}${path}`;
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
