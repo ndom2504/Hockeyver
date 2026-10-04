@@ -26,6 +26,7 @@ export function PlayerScreen() {
   const following = useCommunityStore((state) => state.followedPlayerIds.includes(String(id)));
   const toggle = useCommunityStore((state) => state.toggleFollowPlayer);
   const show = useToastStore((state) => state.show);
+  const [openedAt] = useState(() => Date.now());
   const player = nhl.data?.players.find((item) => item.id === id);
   const team = nhl.data?.teams.find((item) => item.id === player?.teamId);
 
@@ -118,7 +119,7 @@ export function PlayerScreen() {
         </AppText>
         {player.recentGames.map((game) => {
           const opponent = nhl.data?.teams.find((item) => item.id === game.opponentId);
-          const when = new Date(Date.now() - game.daysAgo * 86_400_000).toISOString();
+          const when = new Date(openedAt - game.daysAgo * 86_400_000).toISOString();
           return (
             <View key={`${game.opponentId}-${game.daysAgo}`} style={styles.game}>
               {opponent ? <TeamLogo team={opponent} size={28} /> : null}

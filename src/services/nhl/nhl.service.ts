@@ -13,11 +13,13 @@ import type { NhlSnapshot } from '@/services/nhl/nhl.types';
 export async function getNhlSnapshot(): Promise<NhlSnapshot> {
   const teams = RAW_TEAMS.map(mapTeam);
   const players = RAW_PLAYERS.map(mapPlayer);
-  const fallback = {
+  const fallback: NhlSnapshot = {
     teams,
     players,
     matches: RAW_MATCHES.map((match) => mapMatch(match)),
     standings: RAW_STANDINGS.map(mapStanding),
+    news: [],
+    source: 'demo',
   };
   try {
     const board = await apiRequest<OfficialBoard>('/api/nhl/snapshot', { method: 'GET' });
@@ -27,6 +29,8 @@ export async function getNhlSnapshot(): Promise<NhlSnapshot> {
       players,
       matches: board.matches,
       standings: board.standings.length > 0 ? board.standings : fallback.standings,
+      news: board.news ?? [],
+      source: 'live',
     };
   } catch {
     return fallback;

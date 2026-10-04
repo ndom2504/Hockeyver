@@ -16,8 +16,7 @@ import { useNhlSnapshot } from '@/hooks/use-nhl';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import { useSessionStore } from '@/store/useSessionStore';
 import { useToastStore } from '@/store/useToastStore';
-import { DIVISION_LABEL } from '@/utils/standings';
-import { teamStanding } from '@/utils/standings';
+import { DIVISION_LABEL, teamStanding } from '@/utils/standings';
 import { fold } from '@/utils/text';
 import { POSITION_SHORT } from '@/utils/position';
 

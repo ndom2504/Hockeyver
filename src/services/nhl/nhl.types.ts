@@ -55,6 +55,15 @@ export type Player = {
   recentGames: RecentGame[];
 };
 
+export type GoalEvent = {
+  teamId: string;
+  scorer: string;
+  period: string;
+  time: string;
+  strength: 'ev' | 'pp' | 'sh';
+  emptyNet: boolean;
+};
+
 export type Match = {
   id: string;
   homeTeamId: string;
@@ -67,6 +76,19 @@ export type Match = {
   awayScore: number;
   venue: string;
   finishedIn?: FinishType;
+  preseason?: boolean;
+  goals?: GoalEvent[];
+};
+
+export type NewsItem = {
+  id: string;
+  title: string;
+  lead: string;
+  url: string;
+  imageUrl?: string;
+  teamIds: string[];
+  publishedAt: string;
+  recap?: { awayTeamId: string; homeTeamId: string };
 };
 
 export type Standing = {
@@ -85,6 +107,8 @@ export type NhlSnapshot = {
   players: Player[];
   matches: Match[];
   standings: Standing[];
+  news: NewsItem[];
+  source: 'live' | 'demo';
 };
 
 export type RawTeam = {

@@ -35,12 +35,17 @@ export function PollCard({ poll, variant = 'card' }: Props) {
       <View style={styles.kicker}>
         <View style={[styles.dot, hero && styles.dotHero]} />
         <AppText variant="label" color={hero ? '#D5E4F6' : colors.navy}>
-          {poll.id === 'qotd' ? 'Question du jour' : 'Sondage'}
+          {poll.kind === 'qotd' ? 'Question du jour' : 'Sondage du match'}
         </AppText>
       </View>
       <AppText variant="title3" color={hero ? colors.white : colors.ink}>
         {poll.question}
       </AppText>
+      {poll.note ? (
+        <AppText variant="caption" color={hero ? '#D5E4F6' : colors.muted}>
+          {poll.note}
+        </AppText>
+      ) : null}
       <View style={styles.options}>
         {poll.options.map((option) => {
           const active = selected === option.id;

@@ -4,6 +4,16 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://www.hockeyver.com"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "autoIncrement": true
+    },
     "production": {
       "env": {
         "EXPO_PUBLIC_API_URL": "https://www.hockeyver.com"

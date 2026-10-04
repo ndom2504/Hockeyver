@@ -83,7 +83,7 @@ export function PostCard({ post, variant = 'feed', layout = 'card', onComment }:
   };
 
   const onLike = () => {
-    scale.value = withSequence(withTiming(1.3, { duration: 120 }), withTiming(1, { duration: 150 }));
+    scale.set(withSequence(withTiming(1.3, { duration: 120 }), withTiming(1, { duration: 150 })));
     tap();
     toggleLike('post', post.id);
   };

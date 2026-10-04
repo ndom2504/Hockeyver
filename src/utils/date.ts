@@ -22,6 +22,14 @@ export function formatDay(iso: string) {
   return new Intl.DateTimeFormat('fr-CA', { day: 'numeric', month: 'short' }).format(new Date(iso));
 }
 
+export function formatLongDay(iso: string) {
+  const diff = dayDiff(iso);
+  if (diff === 0) return "Aujourd'hui";
+  if (diff === -1) return 'Hier';
+  const label = new Intl.DateTimeFormat('fr-CA', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(iso));
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 export function formatRelative(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.round(diffMs / 60_000);

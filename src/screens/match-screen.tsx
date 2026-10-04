@@ -12,6 +12,7 @@ import { colors, radius } from '@/constants/theme';
 import { useNhlSnapshot } from '@/hooks/use-nhl';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import { formatDay, formatTime } from '@/utils/date';
+import { goalDetail } from '@/utils/goals';
 
 export function MatchScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -58,7 +59,9 @@ export function MatchScreen() {
       : match.status === 'final'
         ? match.finishedIn === 'ot'
           ? 'Terminé · prolongation'
-          : 'Terminé'
+          : match.finishedIn === 'so'
+            ? 'Terminé · tirs de barrage'
+            : 'Terminé'
         : `${formatDay(match.startTime)} · ${formatTime(match.startTime)}`;
 
   const direct = posts.filter((post) => post.matchId === match.id && !hidden.includes(post.id));
@@ -85,9 +88,32 @@ export function MatchScreen() {
             <Side teamName={home.name} logo={<TeamLogo team={home} size={64} />} score={showScore ? match.homeScore : undefined} />
           </View>
           <AppText variant="footnote" color={colors.muted}>
-            {match.venue}
+            {match.preseason ? `Match préparatoire · ${match.venue}` : match.venue}
           </AppText>
         </View>
+        {match.goals && match.goals.length > 0 ? (
+          <>
+            <AppText variant="label" color={colors.navy}>
+              Buts
+            </AppText>
+            <View style={styles.goals}>
+              {match.goals.map((goal, index) => (
+                <View key={`${goal.period}-${goal.time}-${index}`} style={styles.goal}>
+                  <AppText variant="caption" color={colors.faint} style={styles.goalTime}>
+                    {goal.period} {goal.time}
+                  </AppText>
+                  <AppText variant="footnote" style={styles.flex} numberOfLines={1}>
+                    {goal.scorer}
+                  </AppText>
+                  <AppText variant="caption" color={colors.muted}>
+                    {(goal.teamId === home.id ? home : away).abbreviation}
+                    {goalDetail(goal)}
+                  </AppText>
+                </View>
+              ))}
+            </View>
+          </>
+        ) : null}
         <AppText variant="label" color={colors.navy}>
           Discussions
         </AppText>
@@ -127,4 +153,8 @@ const styles = StyleSheet.create({
   sides: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   side: { width: 120, alignItems: 'center', gap: 8 },
   center: { textAlign: 'center' },
+  goals: { backgroundColor: colors.surface, borderRadius: radius.lg, paddingVertical: 4 },
+  goal: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 10 },
+  goalTime: { width: 72 },
+  flex: { flex: 1 },
 });

@@ -50,19 +50,95 @@ var RAW_MATCHES = [
 
 // src/services/nhl/nhl.live.ts
 var NHL = "https://api-web.nhle.com/v1";
+var NEWS = "https://forge-dapi.d3.nhle.com/v2/content/fr-ca/stories?tags.slug=news&$limit=20";
 var TEAM_IDS = new Set(RAW_TEAMS.map((team) => team.id));
 async function loadOfficialBoard() {
-  const [schedule, standings] = await Promise.all([
+  const [schedule, standings, score, stories] = await Promise.all([
     fetchJson(`${NHL}/schedule/now`),
-    fetchJson(`${NHL}/standings/now`)
+    fetchJson(`${NHL}/standings/now`),
+    fetchJson(`${NHL}/score/now`).catch(() => null),
+    fetchJson(NEWS).catch(() => null)
   ]);
   const firstDay = schedule.gameWeek?.[0]?.date;
-  const previous = firstDay ? await fetchJson(`${NHL}/schedule/${shiftDate(firstDay, -7)}`).catch(() => null) : null;
-  const games = [...previous?.gameWeek ?? [], ...schedule.gameWeek ?? []].flatMap((day) => day.games ?? []);
+  const prevDate = score?.prevDate;
+  const [lastWeek, twoWeeks, prevScore, olderScore] = await Promise.all([
+    firstDay ? fetchJson(`${NHL}/schedule/${shiftDate(firstDay, -7)}`).catch(() => null) : null,
+    firstDay ? fetchJson(`${NHL}/schedule/${shiftDate(firstDay, -14)}`).catch(() => null) : null,
+    prevDate ? fetchJson(`${NHL}/score/${prevDate}`).catch(() => null) : null,
+    prevDate ? fetchJson(`${NHL}/score/${shiftDate(prevDate, -1)}`).catch(() => null) : null
+  ]);
+  const games = [twoWeeks, lastWeek, schedule].flatMap((week) => (week?.gameWeek ?? []).flatMap((day) => day.games ?? []));
+  const goals = goalIndex([score, prevScore, olderScore]);
   return {
-    matches: unique(games).map(mapGame).filter((match) => match !== null),
-    standings: (standings.standings ?? []).map(mapStanding).filter((row) => row !== null)
+    matches: unique(games).map(mapGame).filter((match) => match !== null).map((match) => goals.has(match.id) ? { ...match, goals: goals.get(match.id) } : match),
+    standings: (standings.standings ?? []).map(mapStanding).filter((row) => row !== null),
+    news: (stories?.items ?? []).map(mapStory).filter((item) => item !== null)
   };
+}
+function goalIndex(scores) {
+  const index = /* @__PURE__ */ new Map();
+  for (const score of scores) {
+    for (const game of score?.games ?? []) {
+      if (!game.id || index.has(String(game.id))) continue;
+      const goals = (game.goals ?? []).map(mapGoal).filter((goal) => goal !== null);
+      index.set(String(game.id), goals);
+    }
+  }
+  return index;
+}
+function mapGoal(goal) {
+  const abbrev = typeof goal.teamAbbrev === "string" ? goal.teamAbbrev : goal.teamAbbrev?.default;
+  const id = teamId(abbrev);
+  const type = goal.periodDescriptor?.periodType;
+  if (!id || type === "SO") return null;
+  const first = goal.firstName?.default ?? "";
+  const last = goal.lastName?.default ?? "";
+  const scorer = `${first} ${last}`.trim() || goal.name?.default || "";
+  if (!scorer) return null;
+  const strength = goal.strength === "pp" || goal.strength === "sh" ? goal.strength : "ev";
+  return {
+    teamId: id,
+    scorer,
+    period: type === "OT" ? "Prol." : periodLabel(goal.periodDescriptor),
+    time: goal.timeInPeriod ?? "",
+    strength,
+    emptyNet: goal.goalModifier === "empty-net"
+  };
+}
+function mapStory(story) {
+  const title = (story.headline || story.title || "").trim();
+  if (!story.slug || !title || !story.contentDate) return null;
+  const teamIds = [
+    ...new Set(
+      (story.tags ?? []).map((tag) => teamId(tag.extraData?.abbreviation)).filter((id) => id !== null)
+    )
+  ];
+  const matchup = /^([A-Z]{2,3})@([A-Z]{2,3})/.exec(title);
+  const isRecap = (story.tags ?? []).some((tag) => tag.slug === "game-recap") || story.slug.startsWith("resume-du-match");
+  const pair = !matchup && teamIds.length === 2 ? teamIds : null;
+  const awayTeamId = matchup ? teamId(matchup[1]) : pair?.[0] ?? null;
+  const homeTeamId = matchup ? teamId(matchup[2]) : pair?.[1] ?? null;
+  const template = story.thumbnail?.templateUrl;
+  return {
+    id: story.slug,
+    title,
+    lead: firstParagraph(story.summary ?? ""),
+    url: `https://www.nhl.com/fr/news/${story.slug}`,
+    imageUrl: template ? template.replace("{formatInstructions}", "t_ratio16_9-size40") : void 0,
+    teamIds: [...new Set([...teamIds, awayTeamId, homeTeamId].filter((id) => Boolean(id)))],
+    publishedAt: story.contentDate,
+    recap: isRecap && awayTeamId && homeTeamId ? { awayTeamId, homeTeamId } : void 0
+  };
+}
+function firstParagraph(summary) {
+  const paragraph = summary.split(/\n+/).map((part) => part.trim()).find((part) => part.length > 40) ?? summary.trim();
+  const sentences = paragraph.match(/[^.!?]+[.!?]+/g) ?? [paragraph];
+  let lead = "";
+  for (const sentence of sentences) {
+    if ((lead + sentence).length > 280 && lead) break;
+    lead += sentence;
+  }
+  return lead.trim();
 }
 async function fetchJson(url) {
   const response = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8e3) });
@@ -106,7 +182,8 @@ function mapGame(game) {
     homeScore: game.homeTeam?.score ?? 0,
     awayScore: game.awayTeam?.score ?? 0,
     venue: game.venue?.default ?? "",
-    finishedIn: status === "final" ? finishType(outcome) : void 0
+    finishedIn: status === "final" ? finishType(outcome) : void 0,
+    preseason: game.gameType === 1 ? true : void 0
   };
 }
 function matchStatus(state) {

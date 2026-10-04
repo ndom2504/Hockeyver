@@ -26,7 +26,7 @@ export function HomeScreen() {
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
   const comments = useCommunityStore((state) => state.comments);
   const likes = useCommunityStore((state) => state.likes);
-  const poll = useCommunityStore((state) => state.polls.find((item) => item.id === 'qotd'));
+  const poll = useCommunityStore((state) => state.polls.find((item) => item.kind === 'qotd'));
 
   const visible = useMemo(() => posts.filter((post) => !hidden.includes(post.id)), [posts, hidden]);
   const meId = useSessionStore((state) => state.user?.id);

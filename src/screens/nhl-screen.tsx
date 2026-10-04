@@ -14,13 +14,15 @@ import { TeamLogo } from '@/components/ui/team-logo';
 import { colors, radius } from '@/constants/theme';
 import { useNhlSnapshot } from '@/hooks/use-nhl';
 import type { Conference, Match, Player, Standing, Team } from '@/services/nhl/nhl.types';
-import { dayDiff, formatDay } from '@/utils/date';
+import { dayDiff, formatDay, formatLongDay } from '@/utils/date';
+import { scorerList } from '@/utils/goals';
 import { POSITION_SHORT } from '@/utils/position';
 import { CONFERENCE_LABEL, groupStandings } from '@/utils/standings';
 import { fold } from '@/utils/text';
 
 const PANES = [
   { id: 'matches', label: 'Matchs' },
+  { id: 'results', label: 'Résultats' },
   { id: 'standings', label: 'Classement' },
   { id: 'teams', label: 'Équipes' },
   { id: 'players', label: 'Joueurs' },
@@ -42,6 +44,8 @@ export function NhlScreen() {
         <ErrorState onRetry={() => void query.refetch()} />
       ) : pane === 'matches' ? (
         <MatchesPane teams={query.data.teams} matches={query.data.matches} />
+      ) : pane === 'results' ? (
+        <ResultsPane teams={query.data.teams} matches={query.data.matches} />
       ) : pane === 'standings' ? (
         <StandingsPane teams={query.data.teams} standings={query.data.standings} />
       ) : pane === 'teams' ? (
@@ -57,15 +61,18 @@ function MatchesPane({ teams, matches }: { teams: Team[]; matches: Match[] }) {
   const byId = new Map(teams.map((team) => [team.id, team]));
   const today = matches.filter((match) => dayDiff(match.startTime) === 0);
   const upcoming = matches.filter((match) => dayDiff(match.startTime) > 0);
-  const recent = matches.filter((match) => dayDiff(match.startTime) < 0);
   const sections = [
     { title: "Aujourd'hui", data: today },
     { title: 'Prochains matchs', data: upcoming },
-    { title: 'Résultats récents', data: recent },
-  ];
+  ].filter((section) => section.data.length > 0);
 
   return (
     <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      {sections.length === 0 ? (
+        <AppText variant="footnote" color={colors.muted} style={styles.note}>
+          Aucun match à l’horaire pour le moment. Consultez l’onglet Résultats.
+        </AppText>
+      ) : null}
       {sections.map((section) => (
         <View key={section.title} style={styles.section}>
           <AppText variant="label" color={colors.navy}>
@@ -81,6 +88,72 @@ function MatchesPane({ teams, matches }: { teams: Team[]; matches: Match[] }) {
                   {formatDay(match.startTime)} · {match.venue}
                 </AppText>
                 <MatchCard match={match} home={home} away={away} layout="row" />
+              </View>
+            );
+          })}
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+function ResultsPane({ teams, matches }: { teams: Team[]; matches: Match[] }) {
+  const byId = new Map(teams.map((team) => [team.id, team]));
+  const days = useMemo(() => {
+    const finals = matches
+      .filter((match) => match.status === 'final')
+      .sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+    const groups = new Map<string, Match[]>();
+    for (const match of finals) {
+      const key = formatLongDay(match.startTime);
+      groups.set(key, [...(groups.get(key) ?? []), match]);
+    }
+    return [...groups];
+  }, [matches]);
+
+  if (days.length === 0) {
+    return (
+      <AppText variant="footnote" color={colors.muted} style={[styles.note, styles.emptyNote]}>
+        Aucun résultat récent pour le moment.
+      </AppText>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      {days.map(([day, list]) => (
+        <View key={day} style={styles.section}>
+          <AppText variant="label" color={colors.navy}>
+            {day}
+          </AppText>
+          {list.map((match) => {
+            const home = byId.get(match.homeTeamId);
+            const away = byId.get(match.awayTeamId);
+            if (!home || !away) return null;
+            const awayGoals = scorerList(match, away.id);
+            const homeGoals = scorerList(match, home.id);
+            return (
+              <View key={match.id} style={styles.matchBlock}>
+                {match.preseason ? (
+                  <AppText variant="caption" color={colors.faint}>
+                    Match préparatoire · {match.venue}
+                  </AppText>
+                ) : null}
+                <MatchCard match={match} home={home} away={away} layout="row" />
+                {awayGoals.length > 0 || homeGoals.length > 0 ? (
+                  <View style={styles.scorers}>
+                    {awayGoals.length > 0 ? (
+                      <AppText variant="caption" color={colors.muted}>
+                        {away.abbreviation} : {awayGoals.join(', ')}
+                      </AppText>
+                    ) : null}
+                    {homeGoals.length > 0 ? (
+                      <AppText variant="caption" color={colors.muted}>
+                        {home.abbreviation} : {homeGoals.join(', ')}
+                      </AppText>
+                    ) : null}
+                  </View>
+                ) : null}
               </View>
             );
           })}
@@ -262,6 +335,8 @@ const styles = StyleSheet.create({
   section: { paddingHorizontal: 16, gap: 8, marginBottom: 12 },
   matchBlock: { gap: 6 },
   note: { paddingHorizontal: 16, marginBottom: 8 },
+  emptyNote: { paddingTop: 16 },
+  scorers: { gap: 2, paddingHorizontal: 4 },
   tableHead: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 4 },
   standing: {
     flexDirection: 'row',

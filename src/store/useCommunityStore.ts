@@ -11,6 +11,7 @@ import {
   seedPosts,
 } from '@/services/community/community.mock';
 import { readFeed, writeFeed, type SavedFeed } from '@/services/community/feed-storage';
+import { isLiveId, type LiveCommunity } from '@/services/community/live-feed';
 import {
   fetchPosts,
   publishComment,
@@ -78,6 +79,7 @@ type CommunityState = {
   }) => void;
   toggleFollowTeam: (teamId: string) => boolean;
   toggleFollowPlayer: (playerId: string) => boolean;
+  syncLive: (live: LiveCommunity) => void;
 };
 
 function hasLike(likes: Like[], targetType: Like['targetType'], targetId: string, userId: string) {
@@ -87,13 +89,19 @@ function hasLike(likes: Like[], targetType: Like['targetType'], targetId: string
 const seedPostIds = new Set(seedPosts.map((post) => post.id));
 const seedCommentIds = new Set(seedComments.map((comment) => comment.id));
 const seedNotificationIds = new Set(seedNotifications.map((item) => item.id));
+const fanIds = new Set(seedFans.map((fan) => fan.id));
+
+function isGeneratedLike(like: Like) {
+  return isLiveId(like.targetId) && fanIds.has(like.userId);
+}
 
 function localFeed(state: { posts: Post[]; comments: Comment[]; likes: Like[]; notifications: AppNotification[] }): SavedFeed {
   return {
-    posts: state.posts.filter((post) => !seedPostIds.has(post.id)),
-    comments: state.comments.filter((comment) => !seedCommentIds.has(comment.id)),
+    posts: state.posts.filter((post) => !seedPostIds.has(post.id) && !isLiveId(post.id)),
+    comments: state.comments.filter((comment) => !seedCommentIds.has(comment.id) && !isLiveId(comment.id)),
     likes: state.likes.filter(
       (like) =>
+        !isGeneratedLike(like) &&
         !seedLikes.some(
           (seed) => seed.targetType === like.targetType && seed.targetId === like.targetId && seed.userId === like.userId,
         ),
@@ -409,5 +417,20 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
         : [...state.followedPlayerIds, playerId],
     }));
     return !following;
+  },
+  syncLive: (live) => {
+    set((state) => ({
+      posts: [...live.posts, ...state.posts.filter((post) => !isLiveId(post.id))],
+      comments: [...state.comments.filter((comment) => !isLiveId(comment.id)), ...live.comments],
+      likes: [...state.likes.filter((like) => !isGeneratedLike(like)), ...live.likes],
+      polls: [...live.polls, ...seedPolls.filter((seed) => !live.polls.some((poll) => poll.kind === seed.kind))].map((poll) => {
+        const chosen = state.pollVotes[poll.id];
+        if (!chosen) return poll;
+        return {
+          ...poll,
+          options: poll.options.map((option) => (option.id === chosen ? { ...option, votes: option.votes + 1 } : option)),
+        };
+      }),
+    }));
   },
 }));

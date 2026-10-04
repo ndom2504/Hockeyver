@@ -49,8 +49,11 @@ export type PollOption = {
 
 export type Poll = {
   id: string;
+  kind: 'qotd' | 'match';
   question: string;
   options: PollOption[];
+  matchId?: string;
+  note?: string;
 };
 
 export type NotificationType =

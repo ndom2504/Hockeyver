@@ -20,7 +20,7 @@ export function CommunityScreen() {
   const posts = useCommunityStore((state) => state.posts);
   const hydrateFeed = useCommunityStore((state) => state.hydrateFeed);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
-  const poll = useCommunityStore((state) => state.polls.find((item) => item.id === 'poll-rivalry'));
+  const poll = useCommunityStore((state) => state.polls.find((item) => item.kind === 'match'));
 
   const visible = useMemo(() => {
     return posts

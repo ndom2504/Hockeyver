@@ -41,7 +41,7 @@ export function CommentRow({ comment, nested = false, onReply }: Props) {
   if (!author) return null;
 
   const onLike = () => {
-    scale.value = withSequence(withTiming(1.28, { duration: 110 }), withTiming(1, { duration: 140 }));
+    scale.set(withSequence(withTiming(1.28, { duration: 110 }), withTiming(1, { duration: 140 })));
     tap();
     toggleLike('comment', comment.id);
   };

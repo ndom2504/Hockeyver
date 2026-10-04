@@ -8,7 +8,7 @@ export function useNhlSnapshot() {
     queryKey: ['nhl'],
     queryFn: getNhlSnapshot,
     staleTime: 60_000,
-    refetchInterval: (query) => (query.state.data?.matches.some((match) => match.status === 'live') ? 15_000 : false),
+    refetchInterval: (query) => (query.state.data?.matches.some((match) => match.status === 'live') ? 15_000 : 300_000),
   });
 }
 
