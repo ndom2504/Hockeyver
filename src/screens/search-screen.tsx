@@ -12,6 +12,7 @@ import { colors, radius } from '@/constants/theme';
 import { useNhlSnapshot } from '@/hooks/use-nhl';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import { useSessionStore } from '@/store/useSessionStore';
+import { filterFeedPosts } from '@/utils/feed';
 import { hotTopics } from '@/utils/topics';
 import { displayName, fold } from '@/utils/text';
 
@@ -23,9 +24,11 @@ export function SearchScreen() {
   const comments = useCommunityStore((state) => state.comments);
   const likes = useCommunityStore((state) => state.likes);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
+  const blocked = useCommunityStore((state) => state.blockedUserIds);
   const me = useSessionStore((state) => state.user);
   const needle = fold(query.trim());
-  const topics = useMemo(() => hotTopics(posts.filter((post) => !hidden.includes(post.id)), comments, likes), [posts, comments, likes, hidden]);
+  const visiblePosts = useMemo(() => filterFeedPosts(posts, hidden, blocked), [posts, hidden, blocked]);
+  const topics = useMemo(() => hotTopics(visiblePosts, comments, likes), [visiblePosts, comments, likes]);
 
   const teams = (nhl.data?.teams ?? []).filter((team) =>
     needle.length > 0 && fold(`${team.city} ${team.name} ${team.fullName} ${team.abbreviation}`).includes(needle),
@@ -33,11 +36,8 @@ export function SearchScreen() {
   const players = (nhl.data?.players ?? []).filter((player) =>
     needle.length > 0 && fold(`${player.firstName} ${player.lastName}`).includes(needle),
   );
-  const discussions = posts.filter(
-    (post) =>
-      needle.length > 0 &&
-      !hidden.includes(post.id) &&
-      fold(`${post.body} ${post.hashtags.join(' ')}`).includes(needle),
+  const discussions = visiblePosts.filter(
+    (post) => needle.length > 0 && fold(`${post.body} ${post.hashtags.join(' ')}`).includes(needle),
   );
   const tags = [
     ...new Set(
@@ -46,7 +46,10 @@ export function SearchScreen() {
         .filter((tag) => needle.length > 0 && fold(tag).includes(needle)),
     ),
   ];
-  const people = [me, ...users].filter((user): user is NonNullable<typeof me> => Boolean(user)).filter((user) => {
+  const people = [me, ...users]
+    .filter((user): user is NonNullable<typeof me> => Boolean(user))
+    .filter((user) => !blocked.includes(user.id))
+    .filter((user) => {
     if (needle.length === 0) return false;
     const wrote = [...posts, ...comments.map((comment) => ({ body: comment.body, authorId: comment.authorId }))].some(
       (item) => item.authorId === user.id && fold(item.body).includes(needle),

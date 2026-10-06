@@ -14,6 +14,9 @@
     { "source": "/privacy-policy", "destination": "/confidentialite", "permanent": true },
     { "source": "/politique-de-confidentialite", "destination": "/confidentialite", "permanent": true },
     { "source": "/regles-de-confidentialite", "destination": "/confidentialite", "permanent": true },
-    { "source": "/règles-de-confidentialité", "destination": "/confidentialite", "permanent": true }
+    { "source": "/règles-de-confidentialité", "destination": "/confidentialite", "permanent": true },
+    { "source": "/eula", "destination": "/conditions", "permanent": true },
+    { "source": "/terms", "destination": "/conditions", "permanent": true },
+    { "source": "/terms-of-use", "destination": "/conditions", "permanent": true }
   ]
 }

@@ -19,6 +19,7 @@ export function MatchScreen() {
   const nhl = useNhlSnapshot();
   const posts = useCommunityStore((state) => state.posts);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
+  const blocked = useCommunityStore((state) => state.blockedUserIds);
   const match = nhl.data?.matches.find((item) => item.id === id);
   const home = nhl.data?.teams.find((team) => team.id === match?.homeTeamId);
   const away = nhl.data?.teams.find((team) => team.id === match?.awayTeamId);
@@ -64,13 +65,12 @@ export function MatchScreen() {
             : 'Terminé'
         : `${formatDay(match.startTime)} · ${formatTime(match.startTime)}`;
 
-  const direct = posts.filter((post) => post.matchId === match.id && !hidden.includes(post.id));
+  const visible = (post: (typeof posts)[number]) => !hidden.includes(post.id) && !blocked.includes(post.authorId);
+  const direct = posts.filter((post) => post.matchId === match.id && visible(post));
   const related =
     direct.length > 0
       ? direct
-      : posts
-          .filter((post) => !hidden.includes(post.id) && (post.teamId === home.id || post.teamId === away.id))
-          .slice(0, 4);
+      : posts.filter((post) => visible(post) && (post.teamId === home.id || post.teamId === away.id)).slice(0, 4);
 
   return (
     <View style={styles.screen}>

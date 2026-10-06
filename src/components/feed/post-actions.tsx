@@ -21,6 +21,7 @@ export function PostActions({ postId, visible, onClose }: Props) {
   const hidePost = useCommunityStore((state) => state.hidePost);
   const deletePost = useCommunityStore((state) => state.deletePost);
   const reportPost = useCommunityStore((state) => state.reportPost);
+  const blockUser = useCommunityStore((state) => state.blockUser);
   const show = useToastStore((state) => state.show);
   const meId = useSessionStore((state) => state.user?.id);
   const mine = post?.authorId === meId;
@@ -29,7 +30,7 @@ export function PostActions({ postId, visible, onClose }: Props) {
 
   const report = (reason: ReportReason) => {
     reportPost(postId, reason);
-    show('Merci, notre équipe va examiner ce signalement.');
+    show('Signalement envoyé. La publication est retirée de votre fil.');
     close();
   };
 
@@ -61,6 +62,17 @@ export function PostActions({ postId, visible, onClose }: Props) {
                   close();
                 }}
               />
+              <Action
+                icon="block"
+                label="Bloquer cet utilisateur"
+                danger
+                onPress={() => {
+                  if (!post?.authorId) return;
+                  blockUser(post.authorId, postId);
+                  show('Utilisateur bloqué. Son contenu a été retiré de votre fil.');
+                  close();
+                }}
+              />
               <AppText variant="label" color={colors.muted} style={styles.reportLabel}>
                 Signaler
               </AppText>
@@ -82,7 +94,7 @@ function Action({
   onPress,
   danger = false,
 }: {
-  icon: 'trash' | 'hide' | 'flag' | 'close';
+  icon: 'trash' | 'hide' | 'flag' | 'close' | 'block';
   label: string;
   onPress: () => void;
   danger?: boolean;

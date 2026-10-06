@@ -12,6 +12,8 @@ import {
 } from '@/services/community/community.mock';
 import { readFeed, writeFeed, type SavedFeed } from '@/services/community/feed-storage';
 import { isLiveId, type LiveCommunity } from '@/services/community/live-feed';
+import { notifyModeration } from '@/services/community/moderation.api';
+import { readModeration, writeModeration } from '@/services/community/moderation-storage';
 import {
   fetchPosts,
   publishComment,
@@ -56,6 +58,7 @@ type CommunityState = {
   notifications: typeof seedNotifications;
   reports: Report[];
   hiddenPostIds: string[];
+  blockedUserIds: string[];
   followedTeamIds: string[];
   followedPlayerIds: string[];
   toggleLike: (targetType: Like['targetType'], targetId: string) => void;
@@ -65,6 +68,7 @@ type CommunityState = {
   deletePost: (postId: string) => void;
   hidePost: (postId: string) => void;
   reportPost: (postId: string, reason: ReportReason) => void;
+  blockUser: (userId: string, postId?: string) => void;
   votePoll: (pollId: string, optionId: string) => boolean;
   hydrateFeed: () => Promise<void>;
   markNotificationRead: (id: string) => void;
@@ -118,6 +122,22 @@ function remember(state: { posts: Post[]; comments: Comment[]; likes: Like[]; no
   void writeFeed(localFeed(state));
 }
 
+function rememberModeration(state: { blockedUserIds: string[]; hiddenPostIds: string[] }) {
+  void writeModeration({ blockedUserIds: state.blockedUserIds, hiddenPostIds: state.hiddenPostIds });
+}
+
+function notifyDeveloper(input: {
+  action: 'report' | 'block';
+  reason: ReportReason | 'abuse';
+  targetUserId?: string;
+  postId?: string;
+  note?: string;
+}) {
+  const token = useSessionStore.getState().token;
+  if (!token) return;
+  void notifyModeration(token, input).catch(() => undefined);
+}
+
 function placePost(post: Post) {
   const me = useSessionStore.getState().user;
   useCommunityStore.setState((state) => ({
@@ -137,6 +157,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   notifications: seedNotifications,
   reports: [],
   hiddenPostIds: [],
+  blockedUserIds: [],
   followedTeamIds: ['MTL'],
   followedPlayerIds: ['suzuki'],
   toggleLike: (targetType, targetId) => {
@@ -292,8 +313,10 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   hidePost: (postId) => {
     if (get().hiddenPostIds.includes(postId)) return;
     set((state) => ({ hiddenPostIds: [...state.hiddenPostIds, postId] }));
+    rememberModeration(get());
   },
   reportPost: (postId, reason) => {
+    const post = get().posts.find((item) => item.id === postId);
     const report: Report = {
       id: createId('r'),
       postId,
@@ -301,7 +324,37 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       reason,
       createdAt: new Date().toISOString(),
     };
-    set((state) => ({ reports: [report, ...state.reports] }));
+    set((state) => ({
+      reports: [report, ...state.reports],
+      hiddenPostIds: state.hiddenPostIds.includes(postId) ? state.hiddenPostIds : [...state.hiddenPostIds, postId],
+    }));
+    rememberModeration(get());
+    notifyDeveloper({
+      action: 'report',
+      reason,
+      postId,
+      targetUserId: post?.authorId,
+      note: 'Signalement de contenu depuis l’application.',
+    });
+  },
+  blockUser: (userId, postId) => {
+    if (!userId || userId === actorId()) return;
+    set((state) => {
+      const blockedUserIds = state.blockedUserIds.includes(userId)
+        ? state.blockedUserIds
+        : [...state.blockedUserIds, userId];
+      const authorPosts = state.posts.filter((post) => post.authorId === userId).map((post) => post.id);
+      const hiddenPostIds = [...new Set([...state.hiddenPostIds, ...authorPosts, ...(postId ? [postId] : [])])];
+      return { blockedUserIds, hiddenPostIds };
+    });
+    rememberModeration(get());
+    notifyDeveloper({
+      action: 'block',
+      reason: 'abuse',
+      targetUserId: userId,
+      postId,
+      note: 'Blocage d’un utilisateur abusif. Contenu retiré du fil du signaleur.',
+    });
   },
   votePoll: (pollId, optionId) => {
     if (get().pollVotes[pollId]) return false;
@@ -338,6 +391,11 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     void ring(input.type, input.title, input.body);
   },
   hydrateFeed: async () => {
+    const moderation = await readModeration();
+    set({
+      blockedUserIds: moderation.blockedUserIds,
+      hiddenPostIds: moderation.hiddenPostIds,
+    });
     const saved = await readFeed();
     if (saved) {
       set((state) => ({

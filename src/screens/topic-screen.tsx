@@ -7,6 +7,7 @@ import { StackHeader } from '@/components/navigation/stack-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { colors } from '@/constants/theme';
 import { useCommunityStore } from '@/store/useCommunityStore';
+import { filterFeedPosts } from '@/utils/feed';
 import { fold } from '@/utils/text';
 
 export function TopicScreen() {
@@ -14,12 +15,13 @@ export function TopicScreen() {
   const decoded = decodeURIComponent(tag ?? '');
   const posts = useCommunityStore((state) => state.posts);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
+  const blocked = useCommunityStore((state) => state.blockedUserIds);
   const matches = useMemo(
     () =>
-      posts.filter(
-        (post) => !hidden.includes(post.id) && post.hashtags.some((item) => fold(item) === fold(decoded)),
+      filterFeedPosts(posts, hidden, blocked).filter((post) =>
+        post.hashtags.some((item) => fold(item) === fold(decoded)),
       ),
-    [posts, hidden, decoded],
+    [posts, hidden, blocked, decoded],
   );
 
   return (

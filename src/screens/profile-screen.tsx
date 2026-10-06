@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, FlatList, StyleSheet, View } from 'react-native';
 
@@ -119,6 +119,11 @@ export function ProfileScreen() {
               </View>
               <AppText variant="footnote" color={colors.navy}>
                 Modifier
+              </AppText>
+            </PressableOpacity>
+            <PressableOpacity style={styles.signOut} onPress={() => router.push('/conditions' as Href)}>
+              <AppText variant="footnote" color={colors.navy}>
+                Conditions d’utilisation
               </AppText>
             </PressableOpacity>
             <PressableOpacity style={styles.signOut} onPress={() => router.push('/legal')}>

@@ -23,6 +23,7 @@ export function PlayerScreen() {
   const nhl = useNhlSnapshot();
   const posts = useCommunityStore((state) => state.posts);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
+  const blocked = useCommunityStore((state) => state.blockedUserIds);
   const following = useCommunityStore((state) => state.followedPlayerIds.includes(String(id)));
   const toggle = useCommunityStore((state) => state.toggleFollowPlayer);
   const show = useToastStore((state) => state.show);
@@ -58,7 +59,7 @@ export function PlayerScreen() {
   }
 
   const discussions = posts.filter((post) => {
-    if (hidden.includes(post.id)) return false;
+    if (hidden.includes(post.id) || blocked.includes(post.authorId)) return false;
     return post.playerId === player.id || post.hashtags.some((tag) => fold(tag) === fold(player.tag));
   });
   const goalie = player.position === 'G';

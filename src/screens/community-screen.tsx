@@ -11,6 +11,7 @@ import { FEED_FILTERS } from '@/constants/categories';
 import { colors } from '@/constants/theme';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import type { PostCategory } from '@/types/social';
+import { filterFeedPosts } from '@/utils/feed';
 
 type Filter = PostCategory | 'all';
 
@@ -20,14 +21,14 @@ export function CommunityScreen() {
   const posts = useCommunityStore((state) => state.posts);
   const hydrateFeed = useCommunityStore((state) => state.hydrateFeed);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
+  const blocked = useCommunityStore((state) => state.blockedUserIds);
   const poll = useCommunityStore((state) => state.polls.find((item) => item.kind === 'match'));
 
   const visible = useMemo(() => {
-    return posts
-      .filter((post) => !hidden.includes(post.id))
+    return filterFeedPosts(posts, hidden, blocked)
       .filter((post) => (filter === 'all' ? true : post.category === filter))
       .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-  }, [posts, hidden, filter]);
+  }, [posts, hidden, blocked, filter]);
 
   return (
     <View style={styles.screen}>

@@ -21,6 +21,7 @@ export function PostScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const post = useCommunityStore((state) => state.posts.find((item) => item.id === id));
   const comments = useCommunityStore((state) => state.comments);
+  const blocked = useCommunityStore((state) => state.blockedUserIds);
   const addComment = useCommunityStore((state) => state.addComment);
   const show = useToastStore((state) => state.show);
   const insets = useSafeAreaInsets();
@@ -29,7 +30,7 @@ export function PostScreen() {
 
   const thread = useMemo(() => {
     const list = comments
-      .filter((comment) => comment.postId === id)
+      .filter((comment) => comment.postId === id && !blocked.includes(comment.authorId))
       .sort((a, b) => +new Date(a.createdAt) - +new Date(b.createdAt));
     return list
       .filter((comment) => !comment.parentId)
@@ -37,7 +38,7 @@ export function PostScreen() {
         root,
         replies: list.filter((comment) => comment.parentId === root.id),
       }));
-  }, [comments, id]);
+  }, [comments, blocked, id]);
 
   const rows = thread.flatMap((item) => [
     { key: item.root.id, comment: item.root, nested: false },

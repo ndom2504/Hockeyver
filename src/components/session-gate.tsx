@@ -12,6 +12,7 @@ function guestMayStay(segments: readonly string[]) {
   if (segments.length === 0) return true;
   if (segments[0] === '(tabs)' && (segments.length < 2 || segments[1] === 'index')) return true;
   if (segments[0] === 'auth' && (segments[1] === 'phone' || segments[1] === 'code' || segments[1] === undefined)) return true;
+  if (segments[0] === 'conditions' || segments[0] === 'legal' || segments[0] === 'confidentialite') return true;
   return false;
 }
 

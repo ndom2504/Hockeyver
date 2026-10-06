@@ -25,6 +25,7 @@ export function TeamScreen() {
   const nhl = useNhlSnapshot();
   const posts = useCommunityStore((state) => state.posts);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
+  const blocked = useCommunityStore((state) => state.blockedUserIds);
   const following = useCommunityStore((state) => state.followedTeamIds.includes(String(id)));
   const toggle = useCommunityStore((state) => state.toggleFollowTeam);
   const show = useToastStore((state) => state.show);
@@ -66,7 +67,7 @@ export function TeamScreen() {
   const roster = nhl.data.players.filter((player) => player.teamId === team.id);
   const fanCount = fans.filter((fan) => fan.favoriteTeamId === team.id).length + (me?.favoriteTeamId === team.id ? 1 : 0);
   const discussions = posts.filter((post) => {
-    if (hidden.includes(post.id)) return false;
+    if (hidden.includes(post.id) || blocked.includes(post.authorId)) return false;
     return post.teamId === team.id || post.hashtags.some((tag) => fold(tag) === fold(team.tag));
   });
   const teamsById = new Map(nhl.data.teams.map((item) => [item.id, item]));

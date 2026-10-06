@@ -26,7 +26,8 @@ export type IconName =
   | 'trash'
   | 'send'
   | 'photo'
-  | 'hide';
+  | 'hide'
+  | 'block';
 
 const GLYPHS: Record<IconName, { idle: Glyph; active?: Glyph }> = {
   home: { idle: 'home-outline', active: 'home' },
@@ -50,6 +51,7 @@ const GLYPHS: Record<IconName, { idle: Glyph; active?: Glyph }> = {
   send: { idle: 'send' },
   photo: { idle: 'image-outline' },
   hide: { idle: 'eye-off-outline' },
+  block: { idle: 'account-cancel-outline' },
 };
 
 type Props = {

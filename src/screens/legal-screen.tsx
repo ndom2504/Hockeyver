@@ -19,8 +19,12 @@ const SECTIONS = [
     body: 'L’accès aux photos sert uniquement à illustrer une publication, si la personne le choisit. Le portrait cartoon est généré à partir du pseudo : deux comptes différents n’ont pas la même image.',
   },
   {
+    title: 'Communauté',
+    body: 'Les publications sont générées par les utilisateurs. Les conditions d’utilisation interdisent tout contenu répréhensible et tout comportement abusif. Un utilisateur peut signaler une publication ou bloquer un compte ; le contenu disparaît immédiatement de son fil et l’équipe HOCKEYVER en est informée. Contact modération : ' + SUPPORT_EMAIL + '.',
+  },
+  {
     title: 'App Store',
-    body: 'Catégorie : Sports. Classification d’âge : 12+, à cause des contenus publiés par les fans. Chiffrement : standard, exemption d’exportation. Politique de confidentialité : cet écran. Suppression de compte : dans l’app, Profil. Contact : ' + SUPPORT_EMAIL + '.',
+    body: 'Catégorie : Sports. Classification d’âge : 12+, à cause des contenus publiés par les fans. Chiffrement : standard, exemption d’exportation. Politique de confidentialité : cet écran. Conditions d’utilisation : écran Conditions. Suppression de compte : dans l’app, Profil. Contact : ' + SUPPORT_EMAIL + '.',
   },
   {
     title: 'Play Store',

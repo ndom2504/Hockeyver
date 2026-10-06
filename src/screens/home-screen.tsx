@@ -17,6 +17,7 @@ import { useNhlSnapshot } from '@/hooks/use-nhl';
 import { useCommunityStore } from '@/store/useCommunityStore';
 import { useSessionStore } from '@/store/useSessionStore';
 import { isToday } from '@/utils/date';
+import { filterFeedPosts } from '@/utils/feed';
 import { activityScore, hotTopics } from '@/utils/topics';
 
 export function HomeScreen() {
@@ -24,11 +25,12 @@ export function HomeScreen() {
   const favoriteTeamId = useSessionStore((state) => state.user?.favoriteTeamId);
   const posts = useCommunityStore((state) => state.posts);
   const hidden = useCommunityStore((state) => state.hiddenPostIds);
+  const blocked = useCommunityStore((state) => state.blockedUserIds);
   const comments = useCommunityStore((state) => state.comments);
   const likes = useCommunityStore((state) => state.likes);
   const poll = useCommunityStore((state) => state.polls.find((item) => item.kind === 'qotd'));
 
-  const visible = useMemo(() => posts.filter((post) => !hidden.includes(post.id)), [posts, hidden]);
+  const visible = useMemo(() => filterFeedPosts(posts, hidden, blocked), [posts, hidden, blocked]);
   const meId = useSessionStore((state) => state.user?.id);
   const popular = useMemo(() => {
     const ranked = [...visible].sort((a, b) => activityScore(b, comments, likes) - activityScore(a, comments, likes));
